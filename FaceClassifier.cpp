@@ -361,74 +361,58 @@ void thresh_callback(int, void*, Mat src_gray )
 
 
 int main(int argc, const char *argv[]) {
-    Mat input_matrix, input_face, input_query_face, input_lbp_image;
+    Mat input_img, input_face, input_query_face, input_lbp_image;
     Mat compare_img, compare_face_img, compare_lbp_image, compare_query_face;
     //Input image
     vector<string> photos = listdir ("<path to image direcotry which contains photos to be searched through>");
     string input = "<Path of input image containing the single face to be used for search>";
     
     // Process input image
-    input_matrix = imread(input);
+    input_img = imread(input);
     /// Show in a window
     namedWindow( "Compare image", CV_WINDOW_AUTOSIZE );
     //-- Show what you got
-    imshow( "Image", input_matrix );
+    imshow( "Contours", input_img );
     // Wait for the user to press a key in the GUI window.
     cvWaitKey(0);
     // Free the resources.
     cvDestroyWindow("Image:");
     // cvReleaseImage(&input_Mat)
     if( !face_cascade.load( face_cascade_name ) ){ printf("--(!)Error loading\n"); return -1; };
-    input_face= cropFaceFromImg(input_matrix );
-    /// Show in a window
-    namedWindow( "Compare image", CV_WINDOW_AUTOSIZE );
-    //-- Show what you got
-    imshow( "Face", input_face );
-    // Wait for the user to press a key in the GUI window.
-    cvWaitKey(0);
-    // Free the resources.
-    cvDestroyWindow("Image:");
-    // cvReleaseImage(&input_Mat)
-    // get the spatial histogram from input image
+    input_face= cropFaceFromImg(input_img );
     input_lbp_image = elbp(input_face, 1, 8);
     input_query_face = spatial_histogram(input_lbp_image, /* lbp_image */
                                          static_cast<int>(std::pow(2.0, static_cast<double>(8))), /* number of possible patterns */
                                          8, /* grid size x */
                                          8, /* grid size y */
                                          true /* normed histograms */);
+    
     for(vector<string>::const_iterator i = photos.begin(); i != photos.end(); ++i) {
         cout << *i << endl;
         compare_img = imread(*i);
-        //compare_img = imread(img2);
-        /// Show in a window
-        namedWindow( "Compare image", CV_WINDOW_AUTOSIZE );
-        //-- Show what you got
-        imshow( "Image", compare_img );
-        // Wait for the user to press a key in the GUI window.
-        cvWaitKey(0);
-        // Free the resources.
-        cvDestroyWindow("Image:");
-        // cvReleaseImage(&input_Mat)
         compare_face_img = cropFaceFromImg(compare_img);
-        /// Show in a window
-        namedWindow( "Compare image", CV_WINDOW_AUTOSIZE );
-        //-- Show what you got
-        imshow( "Compare_image", compare_face_img );
-        // Wait for the user to press a key in the GUI window.
-        cvWaitKey(0);
-        // Free the resources.
-        cvDestroyWindow("Image:");
-        // cvReleaseImage(&input_Mat)
+        
         //thresh_callback( 0, 0, face_img_2 );
         // get the spatial histogram from input image
         compare_lbp_image = elbp(compare_face_img, 1, 8);
         compare_query_face = spatial_histogram(compare_lbp_image, /* lbp_image */
-                                                static_cast<int>(std::pow(2.0, static_cast<double>(8))), /* number of possible patterns */
-                                                8, /* grid size x */
-                                                8, /* grid size y */
-                                                true /* normed histograms */);
+                                               static_cast<int>(std::pow(2.0, static_cast<double>(8))), /* number of possible patterns */
+                                               8, /* grid size x */
+                                               8, /* grid size y */
+                                               true /* normed histograms */);
         double dist = compareHist(input_query_face, compare_query_face, CV_COMP_CORREL );
+        // cout for statistical purposes
         cout << dist;
-        
+        if (dist > 0.6) {
+            /// Show in a window
+            namedWindow( "Compare image", CV_WINDOW_AUTOSIZE );
+            //-- Show what you got
+            imshow( "Contours", compare_img );
+            // Wait for the user to press a key in the GUI window.
+            cvWaitKey(0);
+            // Free the resources.
+            cvDestroyWindow("Image:");
+            // cvReleaseImage(&input_Mat)
+        }
     }
 }
